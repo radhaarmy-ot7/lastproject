@@ -1,122 +1,107 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import React from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
+import Login from './pages/Login';
+import TeacherRegistration from './pages/TeacherRegistration';
+import TeacherDashboard from './pages/TeacherDashboard';
+import SidebarLayout from './components/SidebarLayout';
+import StudentList from './pages/teacher/StudentList';
+import AddStudent from './pages/teacher/AddStudent';
+import SearchStudent from './pages/teacher/SearchStudent';
+import AttendanceModule from './pages/teacher/AttendanceModule';
+import ResultsModule from './pages/teacher/ResultsModule';
+import NoticeBoardModule from './pages/teacher/NoticeBoardModule';
+import ActivityLogsModule from './pages/teacher/ActivityLogsModule';
+import TeacherProfileModule from './pages/teacher/TeacherProfileModule';
+import './App.css';
 
-function App() {
-  const [count, setCount] = useState(0)
+const TeacherRoutes = () => {
+  return (
+    <SidebarLayout>
+      <Routes>
+        <Route path="dashboard" element={<TeacherDashboard />} />
+        <Route path="students" element={<StudentList />} />
+        <Route path="add-student" element={<AddStudent />} />
+        <Route path="search" element={<SearchStudent />} />
+        <Route path="attendance" element={<AttendanceModule />} />
+        <Route path="results" element={<ResultsModule />} />
+        <Route path="notices" element={<NoticeBoardModule />} />
+        <Route path="activity-logs" element={<ActivityLogsModule />} />
+        <Route path="profile" element={<TeacherProfileModule />} />
+        <Route path="*" element={<Navigate to="/teacher/dashboard" replace />} />
+      </Routes>
+    </SidebarLayout>
+  );
+};
+
+const StudentDashboard = () => {
+  const [user, setUser] = React.useState(null);
+
+  React.useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData && userData !== 'undefined' && userData !== 'null') {
+      try {
+        setUser(JSON.parse(userData));
+      } catch {
+        window.location.href = '/login';
+      }
+    } else {
+      window.location.href = '/login';
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/login';
+  };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-500">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-white shadow px-6 py-4 flex justify-between items-center">
+        <h1 className="text-xl font-bold text-green-600">🏫 KV School</h1>
+        <div className="flex items-center gap-4">
+          <span className="text-gray-600">👋 {user?.full_name || 'Student'}</span>
+          <button onClick={handleLogout} className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+            Logout
+          </button>
+        </div>
+      </header>
+      <main className="max-w-7xl mx-auto p-6">
+        <div className="bg-white rounded-xl shadow p-6">
+          <h2 className="text-2xl font-bold text-gray-800">Welcome back, {user?.full_name || 'Student'}! 👋</h2>
+          <p className="text-gray-500 mt-1">Here's your academic overview.</p>
+        </div>
+      </main>
+    </div>
+  );
+};
+
+function App() {
+  return (
     <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
+      <Toaster position="top-right" />
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<TeacherRegistration />} />
+        <Route path="/teacher/*" element={<TeacherRoutes />} />
+        <Route path="/student/dashboard" element={<StudentDashboard />} />
+        <Route path="/student/*" element={<StudentDashboard />} />
+      </Routes>
     </>
-  )
+  );
 }
 
-export default App
+export default App;
