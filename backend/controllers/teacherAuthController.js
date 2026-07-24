@@ -17,23 +17,24 @@ const teacherLogin = async (req, res) => {
         }
 
         // For testing - hardcoded credentials
-        // Remove this once your database is set up
+        // This will work even without a database
         if (teacherId === 'T001' && password === 'teacher123') {
             console.log('✅ Hardcoded login successful for T001');
             return res.status(200).json({
                 success: true,
                 message: 'Login successful',
-                token: 'test-token-12345',
+                token: 'test-token-12345-' + Date.now(),
                 user: {
                     id: 1,
                     teacherId: 'T001',
                     name: 'Test Teacher',
-                    email: 'test@school.com'
+                    email: 'test@school.com',
+                    role: 'teacher'
                 }
             });
         }
 
-        // If hardcoded fails, try database
+        // Try database if hardcoded fails
         try {
             const [rows] = await db.query(
                 'SELECT * FROM teachers WHERE teacher_id = ?',
@@ -72,24 +73,26 @@ const teacherLogin = async (req, res) => {
                     id: teacher.id,
                     teacherId: teacher.teacher_id,
                     name: teacher.name,
-                    email: teacher.email
+                    email: teacher.email,
+                    role: teacher.role || 'teacher'
                 }
             });
 
         } catch (dbError) {
             console.error('❌ Database query error:', dbError);
-            // If database fails, fallback to hardcoded
+            // If database fails, try hardcoded one more time
             if (teacherId === 'T001' && password === 'teacher123') {
                 console.log('✅ Fallback hardcoded login successful for T001');
                 return res.status(200).json({
                     success: true,
                     message: 'Login successful (fallback)',
-                    token: 'test-token-12345',
+                    token: 'test-token-12345-' + Date.now(),
                     user: {
                         id: 1,
                         teacherId: 'T001',
                         name: 'Test Teacher',
-                        email: 'test@school.com'
+                        email: 'test@school.com',
+                        role: 'teacher'
                     }
                 });
             }

@@ -2,11 +2,11 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 
 // Use environment variable or fallback
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL || 'https://lastproject-backend.onrender.com';
 
 console.log('🔗 API URL:', API_URL);
 
-// Create axios instance with default config
+// Create axios instance
 const api = axios.create({
   baseURL: API_URL,
   headers: {
@@ -16,7 +16,7 @@ const api = axios.create({
   timeout: 30000,
 });
 
-// Request interceptor - Add token to headers
+// Request interceptor
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -32,7 +32,7 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor - Handle responses and errors
+// Response interceptor
 api.interceptors.response.use(
   (response) => {
     console.log('📥 Response:', response.status, response.config.url);
@@ -43,38 +43,24 @@ api.interceptors.response.use(
     
     if (!error.response) {
       toast.error('Network error. Please check your connection.');
-      console.error('Network error:', error);
       return Promise.reject(error);
     }
 
     const { status, data } = error.response;
     
-    switch (status) {
-      case 401:
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        toast.error('Session expired. Please login again.');
-        if (!window.location.pathname.includes('/login')) {
-          window.location.href = '/login';
-        }
-        break;
-      
-      case 403:
-        toast.error('You do not have permission to perform this action.');
-        break;
-      
-      case 404:
-        toast.error(data?.message || 'Resource not found.');
-        break;
-      
-      case 500:
-        toast.error('Server error. Please try again later.');
-        console.error('Server error:', error);
-        break;
-      
-      default:
-        toast.error(data?.message || 'An unexpected error occurred.');
-        console.error('API error:', error);
+    if (status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      toast.error('Session expired. Please login again.');
+      if (!window.location.pathname.includes('/login')) {
+        window.location.href = '/login';
+      }
+    } else if (status === 404) {
+      toast.error(data?.message || 'Resource not found.');
+    } else if (status === 500) {
+      toast.error('Server error. Please try again later.');
+    } else {
+      toast.error(data?.message || 'An unexpected error occurred.');
     }
     
     return Promise.reject(error);
