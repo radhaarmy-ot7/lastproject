@@ -1,8 +1,10 @@
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import config from '../config';
 
-// TEMPORARY: Hardcoded for production
-const API_URL = 'https://lastproject-backend.onrender.com';
+// USE THE CONFIG FILE
+const API_URL = config.API_URL;
+
 
 // Create axios instance with default config
 const api = axios.create({
