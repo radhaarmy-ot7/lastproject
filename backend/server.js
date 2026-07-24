@@ -37,6 +37,7 @@ app.use(helmet());
 // CORS - Cross-Origin Resource Sharing
 const allowedOrigins = [
     process.env.CORS_ORIGIN,
+    'https://projectfrontend-rkqh.onrender.com',  // Your frontend URL
     'http://localhost:3000',
     'http://localhost:3002',
     'http://localhost:4173',
