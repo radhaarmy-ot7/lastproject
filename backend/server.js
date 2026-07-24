@@ -34,10 +34,15 @@ const PORT = process.env.PORT || 5000;
 // Helmet - Security headers
 app.use(helmet());
 
+// ============================================
 // CORS - Cross-Origin Resource Sharing
+// ============================================
+
+// List of allowed origins
 const allowedOrigins = [
     process.env.CORS_ORIGIN,
-    'https://projectfrontend-rkqh.onrender.com',  // Your frontend URL
+    'https://frontendproject-f7qt.onrender.com',  // YOUR CURRENT FRONTEND URL
+    'https://projectfrontend-rkqh.onrender.com',
     'http://localhost:3000',
     'http://localhost:3002',
     'http://localhost:4173',
@@ -48,32 +53,30 @@ const allowedOrigins = [
     'http://127.0.0.1:5173'
 ].filter(Boolean);
 
-const isAllowedOrigin = (origin) => {
-    if (!origin) return true;
-
-    if (allowedOrigins.includes(origin)) return true;
-
-    try {
-        const { protocol, hostname } = new URL(origin);
-        return ['http:', 'https:'].includes(protocol) && ['localhost', '127.0.0.1', '::1'].includes(hostname);
-    } catch {
-        return false;
-    }
-};
-
+// Simplified CORS configuration
 const corsOptions = {
-    origin: (origin, callback) => {
-        if (isAllowedOrigin(origin)) {
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl)
+        if (!origin) return callback(null, true);
+        
+        if (allowedOrigins.includes(origin)) {
             callback(null, true);
-            return;
+        } else {
+            console.log('Blocked by CORS:', origin);
+            callback(new Error('Not allowed by CORS'));
         }
-        callback(new Error('Not allowed by CORS'));
     },
     credentials: true,
-    optionsSuccessStatus: 200
+    optionsSuccessStatus: 200,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 };
-app.options('*', cors(corsOptions));
+
+// Apply CORS middleware
 app.use(cors(corsOptions));
+
+// Handle preflight requests explicitly
+app.options('*', cors(corsOptions));
 
 // Compression - Gzip compression
 app.use(compression());
