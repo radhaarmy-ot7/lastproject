@@ -28,55 +28,25 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // ============================================
-// SECURITY MIDDLEWARE
+// CORS - MUST BE FIRST!
 // ============================================
-
-// Helmet - Security headers
-app.use(helmet());
-
-// ============================================
-// CORS - Cross-Origin Resource Sharing
-// ============================================
-
-// List of allowed origins
-const allowedOrigins = [
-    process.env.CORS_ORIGIN,
-    'https://frontendproject-f7qt.onrender.com',  // YOUR CURRENT FRONTEND URL
-    'https://projectfrontend-rkqh.onrender.com',
-    'http://localhost:3000',
-    'http://localhost:3002',
-    'http://localhost:4173',
-    'http://localhost:5173',
-    'http://127.0.0.1:3000',
-    'http://127.0.0.1:3002',
-    'http://127.0.0.1:4173',
-    'http://127.0.0.1:5173'
-].filter(Boolean);
-
-// Simplified CORS configuration
-const corsOptions = {
-    origin: function (origin, callback) {
-        // Allow requests with no origin (like mobile apps or curl)
-        if (!origin) return callback(null, true);
-        
-        if (allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            console.log('Blocked by CORS:', origin);
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
+app.use(cors({
+    origin: '*', // Allow all origins for testing
     credentials: true,
     optionsSuccessStatus: 200,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
-};
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
+}));
 
-// Apply CORS middleware
-app.use(cors(corsOptions));
+// Handle preflight requests
+app.options('*', cors());
 
-// Handle preflight requests explicitly
-app.options('*', cors(corsOptions));
+// ============================================
+// SECURITY MIDDLEWARE
+// ============================================
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 
 // Compression - Gzip compression
 app.use(compression());
@@ -97,20 +67,17 @@ app.use('/api', limiter);
 // ============================================
 // BODY PARSING MIDDLEWARE
 // ============================================
-
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // ============================================
 // REQUEST LOGGING MIDDLEWARE
 // ============================================
-
 app.use((req, res, next) => {
     const start = Date.now();
     res.on('finish', () => {
         const duration = Date.now() - start;
-        logger.logRequest(req);
-        logger.logResponse(req, res, duration);
+        console.log(`${req.method} ${req.originalUrl} - ${res.statusCode} - ${duration}ms`);
     });
     next();
 });
@@ -118,22 +85,18 @@ app.use((req, res, next) => {
 // ============================================
 // DATABASE CONNECTION
 // ============================================
-
 db.getConnection((err, connection) => {
     if (err) {
         console.error('❌ Database connection failed:', err.message);
-        logger.error('Database connection failed: ' + err.message);
         process.exit(1);
     }
     console.log('✅ MySQL connected successfully');
-    logger.info('MySQL connected successfully');
     connection.release();
 });
 
 // ============================================
 // ROUTES
 // ============================================
-
 app.use('/api/students', studentRoutes);
 app.use('/api/students', studentDeleteRoutes);
 app.use('/api/students', studentAuthRoutes);
@@ -150,9 +113,19 @@ app.use('/api/activity-logs', activityLogRoutes);
 app.use('/api/pdf', pdfRoutes);
 
 // ============================================
+// TEST ENDPOINT - To verify backend is working
+// ============================================
+app.post('/api/test', (req, res) => {
+    res.json({
+        success: true,
+        message: 'Backend is working!',
+        received: req.body
+    });
+});
+
+// ============================================
 // HEALTH CHECK
 // ============================================
-
 app.get('/api/health', async (req, res) => {
     try {
         const dbStatus = await db.getConnection()
@@ -165,7 +138,6 @@ app.get('/api/health', async (req, res) => {
             database: dbStatus,
             timestamp: new Date().toISOString(),
             uptime: process.uptime(),
-            memory: process.memoryUsage(),
             environment: process.env.NODE_ENV || 'development'
         });
     } catch (error) {
@@ -180,7 +152,6 @@ app.get('/api/health', async (req, res) => {
 // ============================================
 // 404 HANDLER
 // ============================================
-
 app.use((req, res) => {
     res.status(404).json({
         success: false,
@@ -192,12 +163,9 @@ app.use((req, res) => {
 // ============================================
 // GLOBAL ERROR HANDLING MIDDLEWARE
 // ============================================
-
 app.use((err, req, res, next) => {
     console.error('❌ Error:', err.message);
     console.error('Stack:', err.stack);
-    
-    logger.logError(err, req);
     
     const statusCode = err.status || 500;
     const message = err.message || 'Internal Server Error';
@@ -213,40 +181,29 @@ app.use((err, req, res, next) => {
 // ============================================
 // START SERVER
 // ============================================
-
 app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`📡 Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log(`🔗 API URL: http://localhost:${PORT}/api`);
     console.log(`🩺 Health: http://localhost:${PORT}/api/health`);
-    logger.info(`Server started on port ${PORT}`);
 });
 
-// ============================================
-// GRACEFUL SHUTDOWN
-// ============================================
-
+// Graceful shutdown
 process.on('SIGTERM', () => {
     console.log('🛑 SIGTERM received. Shutting down gracefully...');
-    logger.info('SIGTERM received. Shutting down gracefully...');
     process.exit(0);
 });
 
 process.on('SIGINT', () => {
     console.log('🛑 SIGINT received. Shutting down gracefully...');
-    logger.info('SIGINT received. Shutting down gracefully...');
     process.exit(0);
 });
 
-// Unhandled rejection handler
 process.on('unhandledRejection', (reason, promise) => {
     console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
-    logger.error('Unhandled Rejection: ' + reason);
 });
 
-// Uncaught exception handler
 process.on('uncaughtException', (error) => {
     console.error('❌ Uncaught Exception:', error);
-    logger.error('Uncaught Exception: ' + error.message);
     process.exit(1);
 });

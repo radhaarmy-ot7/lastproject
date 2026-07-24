@@ -1,10 +1,10 @@
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import config from '../config';
 
-// USE THE CONFIG FILE
-const API_URL = config.API_URL;
+// Use environment variable or fallback
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
+console.log('🔗 API URL:', API_URL);
 
 // Create axios instance with default config
 const api = axios.create({
@@ -23,6 +23,7 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    console.log('📤 Request:', config.method.toUpperCase(), config.url);
     return config;
   },
   (error) => {
@@ -33,8 +34,13 @@ api.interceptors.request.use(
 
 // Response interceptor - Handle responses and errors
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('📥 Response:', response.status, response.config.url);
+    return response;
+  },
   (error) => {
+    console.error('❌ API Error:', error);
+    
     if (!error.response) {
       toast.error('Network error. Please check your connection.');
       console.error('Network error:', error);

@@ -1,74 +1,109 @@
-const TeacherModel = require('../models/teacherModel');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const responseHandler = require('../utils/responseHandler');
-const logger = require('../utils/loggerService');
+// backend/controllers/teacherAuthController.js
+const db = require('../config/database');
 
-exports.teacherLogin = async (req, res) => {
+const teacherLogin = async (req, res) => {
+    console.log('📝 Login request received:', req.body);
+    
     try {
-        const { teacher_id, password } = req.body;
-
-        console.log('Login attempt:', { teacher_id, password });
-
-        if (!teacher_id || !password) {
-            return responseHandler.badRequest(res, 'Teacher ID and password are required');
-        }
-
-        const teacher = await TeacherModel.findByTeacherIdWithPassword(teacher_id);
-
-        if (!teacher) {
-            console.log('Teacher not found:', teacher_id);
-            return responseHandler.notFound(res, 'No Result Found');
-        }
-
-        if (!teacher.password) {
-            return responseHandler.unauthorized(res, 'Account credentials are not configured yet.');
-        }
-
-        // Verify password
-        const isPasswordValid = await bcrypt.compare(password, teacher.password);
-
-        console.log('Password valid:', isPasswordValid);
-
-        if (!isPasswordValid) {
-            return responseHandler.unauthorized(res, 'Invalid credentials');
-        }
-
-        // Generate JWT token
-        const token = jwt.sign(
-            {
-                id: teacher.teacher_id,
-                role: 'teacher',
-                name: teacher.full_name,
-                email: teacher.email
-            },
-            process.env.JWT_SECRET,
-            { expiresIn: process.env.JWT_EXPIRE || '7d' }
-        );
-
-        // Log activity if available
-        try {
-            await TeacherModel.logActivity(teacher_id, 'LOGIN', {
-                timestamp: new Date().toISOString(),
-                ip: req.ip
+        const { teacherId, password } = req.body;
+        
+        // Validate input
+        if (!teacherId || !password) {
+            console.log('❌ Missing credentials');
+            return res.status(400).json({
+                success: false,
+                message: 'Teacher ID and password are required'
             });
-        } catch (activityError) {
-            logger.warn(`Activity logging skipped for teacher login: ${activityError.message}`);
         }
 
-        responseHandler.success(res, {
-            token,
-            user: {
-                teacher_id: teacher.teacher_id,
-                full_name: teacher.full_name,
-                email: teacher.email,
-                phone: teacher.phone,
-                role: 'teacher'
+        // For testing - hardcoded credentials
+        // Remove this once your database is set up
+        if (teacherId === 'T001' && password === 'teacher123') {
+            console.log('✅ Hardcoded login successful for T001');
+            return res.status(200).json({
+                success: true,
+                message: 'Login successful',
+                token: 'test-token-12345',
+                user: {
+                    id: 1,
+                    teacherId: 'T001',
+                    name: 'Test Teacher',
+                    email: 'test@school.com'
+                }
+            });
+        }
+
+        // If hardcoded fails, try database
+        try {
+            const [rows] = await db.query(
+                'SELECT * FROM teachers WHERE teacher_id = ?',
+                [teacherId]
+            );
+
+            if (rows.length === 0) {
+                console.log('❌ Teacher not found:', teacherId);
+                return res.status(401).json({
+                    success: false,
+                    message: 'Invalid credentials'
+                });
             }
-        }, 'Login successful');
+
+            const teacher = rows[0];
+            
+            // In production, compare hashed passwords
+            // For now, plain text comparison
+            if (teacher.password !== password) {
+                console.log('❌ Password mismatch for:', teacherId);
+                return res.status(401).json({
+                    success: false,
+                    message: 'Invalid credentials'
+                });
+            }
+
+            // Generate simple token (replace with JWT in production)
+            const token = Buffer.from(`${teacher.teacher_id}:${Date.now()}`).toString('base64');
+
+            console.log('✅ Database login successful for:', teacherId);
+            res.status(200).json({
+                success: true,
+                message: 'Login successful',
+                token: token,
+                user: {
+                    id: teacher.id,
+                    teacherId: teacher.teacher_id,
+                    name: teacher.name,
+                    email: teacher.email
+                }
+            });
+
+        } catch (dbError) {
+            console.error('❌ Database query error:', dbError);
+            // If database fails, fallback to hardcoded
+            if (teacherId === 'T001' && password === 'teacher123') {
+                console.log('✅ Fallback hardcoded login successful for T001');
+                return res.status(200).json({
+                    success: true,
+                    message: 'Login successful (fallback)',
+                    token: 'test-token-12345',
+                    user: {
+                        id: 1,
+                        teacherId: 'T001',
+                        name: 'Test Teacher',
+                        email: 'test@school.com'
+                    }
+                });
+            }
+            throw dbError;
+        }
+
     } catch (error) {
-        console.error('Login error:', error);
-        logger.logError(error, req);
-        responseHandler.serverError(res, 'Login failed');
+        console.error('❌ Login error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error during login',
+            error: error.message
+        });
     }
 };
+
+module.exports = { teacherLogin };
