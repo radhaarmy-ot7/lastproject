@@ -1,8 +1,8 @@
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
-// Use environment variable or fallback to localhost
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+// TEMPORARY: Hardcoded for production
+const API_URL = 'https://lastproject-backend.onrender.com';
 
 // Create axios instance with default config
 const api = axios.create({
@@ -17,14 +17,10 @@ const api = axios.create({
 // Request interceptor - Add token to headers
 api.interceptors.request.use(
   (config) => {
-    // Get token from localStorage
     const token = localStorage.getItem('token');
-    
-    // If token exists, add to headers
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
     return config;
   },
   (error) => {
@@ -35,18 +31,14 @@ api.interceptors.request.use(
 
 // Response interceptor - Handle responses and errors
 api.interceptors.response.use(
-  (response) => {
-    return response;
-  },
+  (response) => response,
   (error) => {
-    // Handle network errors
     if (!error.response) {
       toast.error('Network error. Please check your connection.');
       console.error('Network error:', error);
       return Promise.reject(error);
     }
 
-    // Handle specific status codes
     const { status, data } = error.response;
     
     switch (status) {
