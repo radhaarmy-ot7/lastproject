@@ -1,0 +1,177 @@
+# ============================================
+# DEPENDENCIES
+# ============================================
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# ============================================
+# ENVIRONMENT VARIABLES
+# ============================================
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+.env.test
+
+# ============================================
+# LOGS
+# ============================================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ============================================
+# OS FILES
+# ============================================
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*~
+
+# ============================================
+# IDE / EDITOR
+# ============================================
+.vscode/
+.idea/
+*.iml
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# ============================================
+# BUILD OUTPUT
+# ============================================
+dist/
+build/
+out/
+*.tsbuildinfo
+.eslintcache
+
+# ============================================
+# DATABASE
+# ============================================
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+*.mdb
+*.accdb
+
+# ============================================
+# TESTING
+# ============================================
+coverage/
+.nyc_output/
+.vitest/
+*.test.js
+*.spec.js
+__tests__/
+test-results/
+
+# ============================================
+# BACKUP FILES
+# ============================================
+*.bak
+*.backup
+*.tmp
+*.temp
+*.old
+
+# ============================================
+# COMPRESSED FILES
+# ============================================
+*.zip
+*.rar
+*.7z
+*.tar.gz
+*.tgz
+
+# ============================================
+# CERTIFICATES / SECURITY
+# ============================================
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+*.cert
+
+# ============================================
+# APPLICATION SPECIFIC
+# ============================================
+# Uploads
+uploads/
+public/uploads/
+media/
+files/
+*.pdf
+*.docx
+*.xlsx
+
+# Session files
+sessions/
+.session
+
+# Temporary files
+tmp/
+temp/
+.cache/
+
+# ============================================
+# DOCKER
+# ============================================
+docker-compose.override.yml
+docker-compose.*.yml
+.docker/
+Dockerfile*
+
+# ============================================
+# GITHUB
+# ============================================
+.github/
+docs/
+*.md
+LICENSE
+CODE_OF_CONDUCT.md
+CONTRIBUTING.md
+
+# ============================================
+# DEPLOYMENT
+# ============================================
+*.deploy
+*.deployed
+.vercel/
+.netlify/
+.heroku/
+.render/
+
+# ============================================
+# MISC
+# ============================================
+*.pid
+*.seed
+*.pid.lock
+.sass-cache/
+.lesshst
+*.log
+.history/
+.tern-port
+.vs/
+.vitest/
+.storybook-out/
